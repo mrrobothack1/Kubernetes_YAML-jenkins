@@ -1,0 +1,1057 @@
+--- 
+apiVersion: v1
+data: 
+  akamai.conf: "server {\n\n\
+      \tserver_name *.sojuecommerce.com;\n\
+      \tlisten 80 default_server;\n\
+      \t#        listen [::]:80 default_server ipv6only=on;\n\n\
+      \tlisten 443 ssl;\n\n\
+      \troot /usr/share/nginx/html;\n\
+      \tindex index.html;\n\n\
+      \tproxy_connect_timeout 2;\n\
+      \tproxy_send_timeout 30;\n\
+      \tproxy_read_timeout 30;\n\n\
+      \tssl_certificate /etc/nginx/ssl/tls.crt;\n\
+      \tssl_certificate_key /etc/nginx/ssl/tls.key;\n\
+      \tssl_protocols TLSv1.2;\n\n\
+      \tif ($scheme = http) {\n\n\
+      \t    return 301 https://$host$request_uri;\n\
+      \t}\n\
+      \tlocation /health {\n\n\
+      \t    return 200 'iam ok!';\n\
+      \t}\n\
+      \t\n\
+      \tlocation /bluebird/storehealth {\n\n\
+      \t    proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/index.html;\n\
+      \t}\n\n\
+      \x20       location /bluebird/cbp-js-sdk.fonts.min.css {\n\n\
+      \t    proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/cbp-js-sdk.fonts.min.css;\n\
+      \t}\n\n\
+      \tlocation /bluebird/cbp-js-sdk.base.min.css {\n\n\
+      \t    proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/cbp-js-sdk.base.min.css;\n\
+      \t}\n\n\
+      \tlocation /bluebird/cbp-js-sdk.min.js {\n\n\
+      \t    proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/cbp-js-sdk.min.js;\n\
+      \t}\n\n\
+      \tlocation /bluebird/storehealth.min.js {\n\n\
+      \t    proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/storehealth.min.js;\n\
+      \t}\n\
+      \t\n\
+      \tlocation /cbp/css/cbp-js-sdk.fonts.min.css {\n\n\
+      \t    proxy_pass http://static-svc.lle-mcommerce.soju.com/cbp/CBP_r19-7/live/cbp-js-sdk.fonts.min.css;\n\
+      \t}\n\
+      \t\n\
+      \tlocation /cbp/css/cbp-js-sdk.cbp.theme.min.css {\n\
+      \t\n\
+      \x20              proxy_pass http://static-svc.lle-mcommerce.soju.com/cbp/CBP_r19-7/live/cbp-js-sdk.cbp.theme.min.css;\n\
+      \x20       }\n\
+      \t\n\
+      \tlocation /cbp/js/cbp-js-sdk.min.js {\n\n\
+      \t    proxy_pass http://static-svc.lle-mcommerce.soju.com/cbp/CBP_r19-7/live/cbp-js-sdk.min.js;\n\
+      \t}\n\
+      \t\n\
+      \tlocation /cbp/css/cbp-js-sdk.base.min.css {\n\n\
+      \t    proxy_pass http://static-svc.lle-mcommerce.soju.com/cbp/CBP_r19-7/live/cbp-js-sdk.base.min.css;\n\
+      \t}\n\
+      \t\n\
+      \tlocation /nginx_status {\n\n\
+      \t    stub_status on;\n\
+      \t    access_log off;\n\
+      \t    allow all;\n\
+      \t}\n\
+      \tlocation /.well-known/ {\n\n\
+      \t    root /etc/nginx/htdocs/;\n\
+      \t    add_header Content-Type text/plain;\n\
+      \t    if ($host ~ m.sojuecommerce.com) {\n\n\
+      \t          rewrite ^ /.well-known/m.sojuecommerce.com_apple-developer-merchantid-domain-association.txt break;\n\
+      \t    }\n\
+      \t}\n\
+      \tlocation /akamai-sureroute-test-object.htm {\n\n\
+      \t    root /etc/nginx/htdocs/.well-known/;\n\
+      \t    add_header Content-Type text/plain;\n\
+      \t}\n\
+      \tlocation /z1sw.js {\n\n\
+      \t    root /etc/nginx/htdocs/.well-known/;\n\
+      \t    add_header Content-Type application/x-javascript;\n\
+      \t}\n\
+      \tlocation /manifest.json {\n\n\
+      \t    root /etc/nginx/htdocs/.well-known/;\n\
+      \t    add_header Content-Type application/x-javascript;\n\
+      \t}\n\
+      \tlocation ~ \\.shtml$ {\n\n\
+      \t    proxy_pass http://soju.wso-staging.rioseo.com;\n\
+      \t    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n\
+      \t    proxy_set_header X-Forwarded-Host $http_host;\n\
+      \t    proxy_set_header X-Forwarded-Proto $scheme;\n\
+      \t}\n\
+      \tlocation /api/walletapi {\n\
+      \t    resolver 10.23.240.10  ipv6=off valid=30s; \n\
+      \t    proxy_pass https://wallet-migration-qa.lle-mcommerce.soju.com/;\n\
+      \t    proxy_set_header access_token $cookie_accessToken;\n\
+      \x20       }\n\
+      \tlocation /api/wallet/v1/getsojuCashInfo {\n\
+      \t         resolver 10.23.240.10 ipv6=off valid=30s; \n\
+      \t     proxy_pass https://wallet-migration-qa.lle-mcommerce.soju.com/wallet/v1/getsojuCashInfo;\n\
+      \t     proxy_set_header access_token $cookie_softLoginToken;\n\
+      \t}\n\
+      \tlocation ~ ^(/v1/resources/create/incident|/v1/resources/ipaddress) {\n\
+      \t     resolver  10.23.240.10 ipv6=off valid=30s;\n\
+      \x20                proxy_pass https://OPEN_SHIFT_URL$request_uri;\n\
+      \t}\n\
+      \x20       location ~ (/auditevents|/beans|/conditions|/configprops|/dump|/env|/flyway|/heapdump|/liquibase|/logfile|/loggers|/metrics|/prometheus|/scheduledtasks|/sessions|/shutdown|/threaddump|/trace|/mappings|/autoconfig|/httptrace|/auditevents/|/beans/|/conditions/|/configprops/|/dump/|/env/|/flyway/|/heapdump/|/liquibase/|/logfile/|/loggers/|/metrics/|/prometheus/|/scheduledtasks/|/sessions/|/shutdown/|/threaddump/|/trace/|/mappings/|/autoconfig/|/httptrace/|/info/)$ {\n\
+      \t     deny all;\n\
+      \t}\n\
+      \tlocation / {\n\n\
+      \t    if ($request_uri ~* /feature/pre-qual/prequal_inquiry.jsp) {\n\n\
+      \t          return 301 https://$host/checkout/prequal_inquiry.jsp;\n\
+      \t    }           \n\n\
+      \t    if ($args ~* (.*)(\\|)(.*)) {\n\n\
+      \t          set $args $1%7c$3;\n\
+      \t    }\n\
+      \t    add_header X-Frame-Options SAMEORIGIN;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $tcom false;\n\
+      \t    \n\
+      \t    if ($request_uri ~* ^/checkout/(dev-dist|dist|images|js|libs|resources|angular4-hybrid|bundle.js)) {\n\n\
+      \t          proxy_pass http://static-svc.lle-mcommerce.soju.com/hybrid/r19-7/live$request_uri;\n\
+      \t          break;\n\
+      \t    }\n\n\n\
+      \t    if ($request_uri ~* ^/(chatbot|css|dev-dist|dist|images|js|lib|resources|yes2u)) {\n\n\
+      \t          proxy_pass http://static-svc.lle-mcommerce.soju.com/frontend/r19-7/live$request_uri;\n\
+      \t          break;\n\
+      \t    }\n\n\
+      \t    if ($host ~ tcom) {\n\n\
+      \t          set $tcom true;\n\
+      \t    }\n\
+      \t    if ($host ~ mobile) {\n\n\
+      \t          set $tcom true;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~ sojuTabletWrapperApp) {\n\n\
+      \t          set $tcom true;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t          set $tcom true;\n\
+      \t    }\n\
+      \t    proxy_set_header tcom $tcom;\n\
+      \t    #if ($arg_channelType ~ TabletWrapperApp){\n\n\
+      \t    #set $tcom true;\n\
+      \t    #}\n\
+      \t    \n\
+      \t    if ($cookie_channelType ~ TabletWrapperApp) {\n\n\
+      \t          set $tcom true;\n\
+      \t    }\n\
+      \t    proxy_set_header tcom $tcom;\n\
+      \t    proxy_pass http://mui_upstream;\n\
+      \t    #if ($tcom = true ) {\n\n\
+      \t          #proxy_pass http://tui_upstream;\n\
+      \t    #}\n\
+      \t    #if ($tcom = false ) {\n\n\
+      \t          #proxy_pass http://mui_upstream;\n\
+      \t    #}\n\
+      \t}\n\
+      \tlocation = /api/loyalty {\n\n\
+      \t    return 302 /api/loyalty/;\n\
+      \t}\n\
+      \tlocation /api/loyalty/ {\n\n\
+      \t    proxy_pass http://loyalty_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $token \"\";\n\
+      \t    if ($http_access_token != \"\") {\n\n\
+      \t          set $token $http_access_token;\n\
+      \t    }\n\
+      \t    if ($cookie_hasSoftLoginToken != \"\") {\n\n\
+      \t          set $token $cookie_softLoginToken;\n\
+      \t    }\n\
+      \t    \n\
+      \t    proxy_set_header access_token $token;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \t\n\
+      \tlocation = /api/encryption {\n\n\
+      \t    return 302 /api/encryption/;\n\
+      \t}\n\
+      \tlocation /api/encryption/ {\n\n\
+      \t    proxy_pass http://encryption_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /api/kcc {\n\n\
+      \t    return 302 /api/kcc/;\n\
+      \t}\n\
+      \tlocation /api/kcc/ {\n\n\
+      \t    proxy_pass http://kcc_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $token \"\";\n\
+      \t    if ($http_access_token != \"\") {\n\n\
+      \t          set $token $http_access_token;\n\
+      \t    }\n\
+      \t    if ($cookie_hasSoftLoginToken != \"\") {\n\n\
+      \t          set $token $cookie_softLoginToken;\n\
+      \t    }\n\
+      \t    proxy_set_header access_token $token;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /api/profile {\n\n\
+      \t    return 302 /api/profile/;\n\
+      \t}\n\
+      \tlocation /api/profile/ {\n\n\
+      \t    proxy_pass http://profile_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $token \"\";\n\
+      \t    set $cookietoken \"\";\n\
+      \t    if ($cookie_hasSoftLoginToken != \"\") {\n\
+      \t          set $token $cookie_softLoginToken;\n\
+      \t          set $cookietoken $cookie_softLoginToken;\n\
+      \t    }\n\
+      \t    if ($request_uri ~* ^/api/profile/(v1/profile/password)) {\n\
+      \t          set $token \"\";\n\
+      \t    }\n\
+      \t    if ($http_access_token != \"\") {\n\
+      \t          set $token $http_access_token;\n\
+      \t    }\n\
+      \t    if ($http_access_token ~ DUMMY_TOKEN) {\n\
+      \t          set $token $cookietoken;\n\
+      \t    }\n\
+      \t    proxy_set_header access_token $token;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /api/payments {\n\n\
+      \t    return 302 /api/payments/;\n\
+      \t}\n\
+      \tlocation /api/payments/ {\n\n\
+      \t    proxy_pass http://payments_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /api/product {\n\n\
+      \t    return 302 /api/product/;\n\
+      \t}\n\
+      \tlocation /api/product/ {\n\n\
+      \t    proxy_pass http://product_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \t\n\
+      \t\n\
+      \t\n\
+      \tlocation = /api/browse {\n\n\
+      \t    return 302 /api/browse/;\n\
+      \t}\n\
+      \tlocation /api/browse/ {\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    set $x_correlation_id $http_x_correlation_id;\n\
+      \t    set $Accept $http_Accept;\n\
+      \t    set $Content $http_Content_Type;\n\
+      \t    if ($arg_x_channel != \"\") {\n\
+      \t          set $Accept \"text/html\";\n\
+      \t          set $Content \"text/html\";\n\
+      \t          set $x_channel $arg_x_channel;\n\
+      \t          set $x_correlation_id \"NAID-$msec\";\n\
+      \t    }\n\
+      \t    proxy_set_header Accept $Accept;\n\
+      \t    proxy_set_header Content-Type $Content;\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t    proxy_set_header x-correlation-id $x_correlation_id;\n\
+      \t    \n\
+      \t    proxy_pass http://browse_upstream/;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /cbp {\n\n\
+      \t    return 302 /cbp/;\n\
+      \t}\n\
+      \tlocation /cbp/ {\n\n\
+      \t    proxy_set_header Host $host;\n\
+      \t    proxy_set_header Upgrade $http_upgrade;\n\n\
+      \t    set $upgrade \"\";\n\n\
+      \t    if ($http_upgrade) {\n\n\
+      \t          set $upgrade \"upgrade\";\n\
+      \t    }\n\
+      \t    proxy_set_header Connection $upgrade;\n\
+      \t    proxy_pass http://cbp_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    proxy_pass_request_headers on;\n\
+      \t    proxy_buffering off;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /api/lookup {\n\n\
+      \t    return 302 /api/lookup/;\n\
+      \t}\n\
+      \tlocation /api/lookup/ {\n\n\
+      \t    proxy_pass http://lookup_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \t\n\
+      \tlocation = /api/checkout {\n\n\
+      \t    return 302 /api/checkout/;\n\
+      \t}\n\
+      \tlocation /api/checkout/ {\n\n\
+      \t    proxy_pass http://checkout_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $token \"\";\n\
+      \t    \n\
+      \t    set $requestID $http_requestID;\n\
+      \t    set $last_placeorder_ts $http_last_placeorder_ts;\n\
+      \t    set $requestId_timestamp $http_requestId_timestamp;\n\
+      \t    if ($cookie_requestID != \"\") {\n\n\
+      \t          set  $requestID $cookie_requestID;\n\
+      \t    }\n\
+      \t    if ($cookie_last_placeorder_ts != \"\") {\n\n\
+      \t          set  $last_placeorder_ts $cookie_last_placeorder_ts;\n\
+      \t    }\n\
+      \t    if ($cookie_requestId_timestamp != \"\") {\n\n\
+      \t          set  $requestId_timestamp $cookie_requestId_timestamp;\n\
+      \t    }           \n\
+      \t    proxy_set_header requestId $requestID;\n\
+      \t    proxy_set_header requestId_timestamp $requestId_timestamp;\n\
+      \t    proxy_set_header last_placeorder_ts $last_placeorder_ts;\n\
+      \t    if ($http_access_token != \"\") {\n\n\
+      \t          set $token $http_access_token;\n\
+      \t    }\n\
+      \t    if ($cookie_hasSoftLoginToken != \"\") {\n\n\
+      \t          set $token $cookie_softLoginToken;\n\
+      \t    }\n\
+      \t    proxy_set_header access_token $token;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /api/review {\n\n\
+      \t    return 302 /api/review/;\n\
+      \t}\n\
+      \tlocation /api/review/ {\n\n\
+      \t    proxy_pass http://review_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /api/resources {\n\n\
+      \t    return 302 /api/resources/;\n\
+      \t}\n\
+      \tlocation /api/resources/ {\n\n\
+      \t    proxy_pass http://resources_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /api/auth {\n\n\
+      \t    return 302 /api/encryption/;\n\
+      \t}\n\
+      \tlocation /api/auth/ {\n\n\
+      \t    proxy_pass http://auth_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\
+      \tlocation = /api/recommendations {\n\n\
+      \t    return 302 /api/encryption/;\n\
+      \t}\n\
+      \tlocation /api/recommendations/ {\n\n\
+      \t    proxy_pass http://recommendations_upstream/;\n\
+      \t    proxy_http_version 1.1;\n\
+      \t    set $x_channel $http_x_channel;\n\
+      \t    if ($http_user_agent ~* kkube) {\n\
+      \t          set $x_channel kube;\n\
+      \t    }\n\
+      \t    if ($http_user_agent ~* nextgenkiosk) {\n\
+      \t    set $x_channel nextgenkiosk;\n\
+      \t    }\n\
+      \t    proxy_set_header x-channel $x_channel;\n\
+      \t}\n\n\n\
+      \t# gzip compression ==> START\n\
+      \tgzip on;\n\
+      \tgzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;\n\
+      \tgzip_proxied no-cache no-store private expired auth;\n\
+      \tgzip_min_length 100;\n\
+      \t# gzip compression <== END\n\
+      }\n\n"
+  auth.conf: |
+      upstream  auth_upstream  {
+          server auth.r19-5-auth-svc.svc.cluster.local;
+      }
+  browse.conf: |
+      upstream  browse_upstream  {
+          server browse.r19-7-browse-svc.svc.cluster.local;
+      }
+  cbp.conf: |
+      upstream  cbp_upstream  {
+          server cbp.r18-8-cbp-svc.svc.cluster.local;
+      }
+  checkout.conf: |
+      upstream  checkout_upstream  {
+          server checkout.r19-7-checkout-svc.svc.cluster.local;
+      }
+  encryption.conf: |
+      upstream  encryption_upstream  {
+          server encryption.r19-3-encryption-svc.svc.cluster.local;
+      }
+  kcc.conf: |
+      upstream  kcc_upstream  {
+          server kcc.r19-3-kcc-svc.svc.cluster.local;
+      }
+  lookup.conf: |
+      upstream  lookup_upstream  {
+          server lookup.r19-3-lookup-svc.svc.cluster.local;
+      }
+  loyalty.conf: |
+      upstream  loyalty_upstream  {
+          server loyalty.r19-7-loyalty-svc.svc.cluster.local;
+      }
+  msp.conf: |
+      upstream  api_upstream  {
+          server msp.r19-1-msp-svc.svc.cluster.local;
+      }
+  mui.conf: |
+      upstream  mui_upstream  {
+          server mui.r19-7-mui-svc.svc.cluster.local;
+      }
+  origin.conf: |
+      server {
+      
+            server_name *.soju.com;
+            listen 80;
+            #        listen [::]:80 ipv6only=on;
+      
+            listen 443 ssl;
+      
+            root /usr/share/nginx/html;
+            index index.html;
+      
+            proxy_connect_timeout 2;
+            proxy_send_timeout 30;
+            proxy_read_timeout 30;
+      
+            ssl_certificate /etc/nginx/ssl/tls.crt;
+            ssl_certificate_key /etc/nginx/ssl/tls.key;
+            ssl_protocols TLSv1.2;
+      
+            if ($scheme = http) {
+      
+                  return 301 https://$host$request_uri;
+            }
+            location /health {
+      
+                  return 200 'iam ok!';
+            }
+            
+             location /bluebird/storehealth {
+      
+                  proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/index.html;
+            }
+      
+          location /bluebird/cbp-js-sdk.fonts.min.css {
+      
+                  proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/cbp-js-sdk.fonts.min.css;
+            }
+      
+            location /bluebird/cbp-js-sdk.base.min.css {
+      
+                  proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/cbp-js-sdk.base.min.css;
+            }
+      
+            location /bluebird/cbp-js-sdk.min.js {
+      
+                  proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/cbp-js-sdk.min.js;
+            }
+      
+            location /bluebird/storehealth.min.js {
+      
+                  proxy_pass http://static-svc.lle-mcommerce.soju.com/bluebird/CBP_r19-7/live/storehealth.min.js;
+            }
+            
+            
+            location /cbp/css/cbp-js-sdk.fonts.min.css {
+      
+                  proxy_pass http://static-svc.lle-mcommerce.soju.com/cbp/CBP_r19-7/live/cbp-js-sdk.fonts.min.css;
+            }
+            
+            location /cbp/css/cbp-js-sdk.cbp.theme.min.css {      
+            
+                     proxy_pass http://static-svc.lle-mcommerce.soju.com/cbp/CBP_r19-7/live/cbp-js-sdk.cbp.theme.min.css;
+              }
+            
+            location /cbp/js/cbp-js-sdk.min.js {
+      
+                  proxy_pass http://static-svc.lle-mcommerce.soju.com/cbp/CBP_r19-7/live/cbp-js-sdk.min.js;
+            }
+            
+            location /cbp/css/cbp-js-sdk.base.min.css {
+      
+                  proxy_pass http://static-svc.lle-mcommerce.soju.com/cbp/CBP_r19-7/live/cbp-js-sdk.base.min.css;
+            }
+            
+            location /nginx_status {
+      
+                  stub_status on;
+                  access_log off;
+                  allow all;
+            }
+            location /.well-known/ {
+      
+                  root /etc/nginx/htdocs/;
+                  add_header Content-Type text/plain;
+                  if ($host ~ m.sojuecommerce.com) {
+      
+                        rewrite ^ /.well-known/m.sojuecommerce.com_apple-developer-merchantid-domain-association.txt break;
+                  }
+            }
+            location /akamai-sureroute-test-object.htm {
+      
+                  root /etc/nginx/htdocs/.well-known/;
+                  add_header Content-Type text/plain;
+            }
+            location /z1sw.js {
+      
+                  root /etc/nginx/htdocs/.well-known/;
+                  add_header Content-Type application/x-javascript;
+            }
+            location /manifest.json {
+      
+                  root /etc/nginx/htdocs/.well-known/;
+                  add_header Content-Type application/x-javascript;
+            }
+            location ~ \.shtml$ {
+      
+                  proxy_pass http://soju.wso-staging.rioseo.com;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Host $http_host;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+            }
+            location /api/walletapi {
+                  resolver 10.23.240.10 ipv6=off valid=30s; 
+                  proxy_pass https://wallet-migration-qa.lle-mcommerce.soju.com/;
+                  proxy_set_header access_token $cookie_accessToken;
+              }
+            location /api/wallet/v1/getsojuCashInfo {
+                    resolver 10.23.240.10 ipv6=off valid=30s;
+                    proxy_pass https://wallet-migration-qa.lle-mcommerce.soju.com/wallet/v1/getsojuCashInfo;
+                    proxy_set_header access_token $cookie_softLoginToken;
+            }
+            location ~ ^(/v1/resources/create/incident|/v1/resources/ipaddress) {
+                   resolver 10.23.240.10 ipv6=off valid=30s;
+                       proxy_pass https://OPEN_SHIFT_URL$request_uri;
+            }
+              location ~ (/auditevents|/beans|/conditions|/configprops|/dump|/env|/flyway|/heapdump|/liquibase|/logfile|/loggers|/metrics|/prometheus|/scheduledtasks|/sessions|/shutdown|/threaddump|/trace|/mappings|/autoconfig|/httptrace|/auditevents/|/beans/|/conditions/|/configprops/|/dump/|/env/|/flyway/|/heapdump/|/liquibase/|/logfile/|/loggers/|/metrics/|/prometheus/|/scheduledtasks/|/sessions/|/shutdown/|/threaddump/|/trace/|/mappings/|/autoconfig/|/httptrace/|/info/)$ {
+                       deny all;
+              }
+            location / {
+      
+                  if ($request_uri ~* /feature/pre-qual/prequal_inquiry.jsp) {
+      
+                        return 301 https://$host/checkout/prequal_inquiry.jsp;
+                  }     
+      
+                  if ($args ~* (.*)(\|)(.*)) {
+      
+                        set $args $1%7c$3;
+                  }
+                  add_header X-Frame-Options SAMEORIGIN;
+                  proxy_http_version 1.1;
+                  set $tcom false;
+                  
+                  if ($request_uri ~* ^/checkout/(dev-dist|dist|images|js|libs|resources|angular4-hybrid|bundle.js)) {
+      
+                        proxy_pass http://static-svc.lle-mcommerce.soju.com/hybrid/r19-7/live$request_uri;
+                        break;
+                  }
+      
+      
+                  if ($request_uri ~* ^/(chatbot|css|dev-dist|dist|images|js|lib|resources|yes2u)) {
+      
+                        proxy_pass http://static-svc.lle-mcommerce.soju.com/frontend/r19-7/live$request_uri;
+                        break;
+                  }
+      
+                  if ($host ~ tcom) {
+      
+                        set $tcom true;
+                  }
+                  if ($host ~ mobile) {
+      
+                        set $tcom true;
+                  }
+                  if ($http_user_agent ~ sojuTabletWrapperApp) {
+      
+                        set $tcom true;
+                  }
+                  #if ($arg_channelType ~ TabletWrapperApp){
+      
+                  #set $tcom true;
+                  #}
+            
+                  if ($cookie_channelType ~ TabletWrapperApp) {
+      
+                        set $tcom true;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                        set $tcom true;
+                  }
+                  proxy_set_header tcom $tcom;
+                  proxy_pass http://mui_upstream;
+                  #if ($tcom = true ) {
+      
+                        #proxy_pass http://tui_upstream;
+                  #}
+                  #if ($tcom = false ) {
+      
+                        #proxy_pass http://mui_upstream;
+                  #}
+            }
+            location = /api/loyalty {
+      
+                  return 302 /api/loyalty/;
+            }
+            location /api/loyalty/ {
+      
+                  proxy_pass http://loyalty_upstream/;
+                  proxy_http_version 1.1;
+                  set $token "";
+                  if ($http_access_token != "") {
+      
+                        set $token $http_access_token;
+                  }
+                  if ($cookie_hasSoftLoginToken != "") {
+      
+                        set $token $cookie_softLoginToken;
+                  }
+                  proxy_set_header access_token $token;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            
+            
+            
+            location = /api/encryption {
+      
+                  return 302 /api/encryption/;
+            }
+            location /api/encryption/ {
+      
+                  proxy_pass http://encryption_upstream/;
+                  proxy_http_version 1.1;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            
+            location = /api/kcc {
+      
+                  return 302 /api/kcc/;
+            }
+            location /api/kcc/ {
+      
+                  proxy_pass http://kcc_upstream/;
+                  proxy_http_version 1.1;
+                  set $token "";
+                  if ($http_access_token != "") {
+      
+                        set $token $http_access_token;
+                  }
+                  if ($cookie_hasSoftLoginToken != "") {
+      
+                        set $token $cookie_softLoginToken;
+                  }
+                  proxy_set_header access_token $token;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            location = /api/profile {
+      
+                  return 302 /api/profile/;
+            }
+            location /api/profile/ {
+                  proxy_pass http://profile_upstream/;
+                  proxy_http_version 1.1;
+                  set $token "";
+                  set $cookietoken "";
+                  if ($cookie_hasSoftLoginToken != "") {
+                        set $token $cookie_softLoginToken;
+                        set $cookietoken $cookie_softLoginToken;
+                  }
+                  if ($request_uri ~* ^/api/profile/(v1/profile/password)) {
+                        set $token "";
+                  }
+                  if ($http_access_token != "") {
+                        set $token $http_access_token;
+                  }
+                  if ($http_access_token ~ DUMMY_TOKEN) {
+                        set $token $cookietoken;
+                  }
+                  proxy_set_header access_token $token;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            location = /api/payments {
+      
+                  return 302 /api/payments/;
+            }
+            location /api/payments/ {
+      
+                  proxy_pass http://payments_upstream/;
+                  proxy_http_version 1.1;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            
+            location = /api/product {
+      
+                  return 302 /api/product/;
+            }
+            location /api/product/ {
+      
+                  proxy_pass http://product_upstream/;
+                  proxy_http_version 1.1;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            
+            location = /api/browse {
+      
+                  return 302 /api/browse/;
+            }
+            location /api/browse/ {
+                  proxy_http_version 1.1;
+                  set $x_channel $http_x_channel;
+                  set $x_correlation_id $http_x_correlation_id;
+                  set $Accept $http_Accept;
+                  set $Content $http_Content_Type;
+                  if ($arg_x_channel != "") {
+                        set $Accept "text/html";
+                        set $Content "text/html";
+                        set $x_channel $arg_x_channel;
+                        set $x_correlation_id "NAID-$msec";
+                  }
+                  proxy_set_header Accept $Accept;
+                  proxy_set_header Content-Type $Content;
+                  proxy_set_header x-channel $x_channel;
+                  proxy_set_header x-correlation-id $x_correlation_id;
+                  
+                  proxy_pass http://browse_upstream/;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            location = /cbp {
+      
+                  return 302 /cbp/;
+            }
+            location /cbp/ {
+      
+                  proxy_set_header Host $host;
+                  proxy_set_header Upgrade $http_upgrade;
+      
+                  set $upgrade "";
+      
+                  if ($http_upgrade) {
+      
+                        set $upgrade "upgrade";
+                  }
+                  proxy_set_header Connection $upgrade;
+                  proxy_pass http://cbp_upstream/;
+                  proxy_http_version 1.1;
+                  proxy_pass_request_headers on;
+                  proxy_buffering off;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            location = /api/lookup {
+      
+                  return 302 /api/lookup/;
+            }
+            location /api/lookup/ {
+      
+                  proxy_pass http://lookup_upstream/;
+                  proxy_http_version 1.1;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            location = /api/checkout {
+      
+                  return 302 /api/checkout/;
+            }
+            location /api/checkout/ {
+      
+                  proxy_pass http://checkout_upstream/;
+                  proxy_http_version 1.1;
+                  set $token "";
+                  
+                  set $requestID $http_requestID;
+                  set $last_placeorder_ts $http_last_placeorder_ts;
+                  set $requestId_timestamp $http_requestId_timestamp;
+                  if ($cookie_requestID != "") {
+      
+                        set  $requestID $cookie_requestID;
+                  }
+                  if ($cookie_last_placeorder_ts != "") {
+      
+                        set  $last_placeorder_ts $cookie_last_placeorder_ts;
+                  }
+                  if ($cookie_requestId_timestamp != "") {
+      
+                        set  $requestId_timestamp $cookie_requestId_timestamp;
+                  }           
+                  proxy_set_header requestId $requestID;
+                  proxy_set_header requestId_timestamp $requestId_timestamp;
+                  proxy_set_header last_placeorder_ts $last_placeorder_ts;
+                  if ($http_access_token != "") {
+      
+                        set $token $http_access_token;
+                  }
+                  if ($cookie_hasSoftLoginToken != "") {
+      
+                        set $token $cookie_softLoginToken;
+                  }
+                  proxy_set_header access_token $token;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            location = /api/review {
+      
+                  return 302 /api/review/;
+            }
+            location /api/review/ {
+      
+                  proxy_pass http://review_upstream/;
+                  proxy_http_version 1.1;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            location = /api/resources {
+      
+                  return 302 /api/resources/;
+            }
+            location /api/resources/ {
+      
+                  proxy_pass http://resources_upstream/;
+                  proxy_http_version 1.1;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            location = /api/auth {
+      
+                  return 302 /api/encryption/;
+            }
+            location /api/auth/ {
+      
+                  proxy_pass http://auth_upstream/;
+                  proxy_http_version 1.1;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+            location = /api/recommendations {
+      
+                  return 302 /api/encryption/;
+            }
+            location /api/recommendations/ {
+      
+                  proxy_pass http://recommendations_upstream/;
+                  proxy_http_version 1.1;
+                  set $x_channel $http_x_channel;
+                  if ($http_user_agent ~* kkube) {
+                        set $x_channel kube;
+                  }
+                  if ($http_user_agent ~* nextgenkiosk) {
+                  set $x_channel nextgenkiosk;
+                  }
+                  proxy_set_header x-channel $x_channel;
+            }
+      
+      
+            # gzip compression ==> START
+            gzip on;
+            gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+            gzip_proxied no-cache no-store private expired auth;
+            gzip_min_length 100;
+            # gzip compression <== END
+      }
+  payments.conf: |
+      upstream  payments_upstream  {
+          server payments.r19-3-payments-svc.svc.cluster.local;
+      }
+  product.conf: |
+      upstream  product_upstream  {
+          server product.r19-3-product-svc.svc.cluster.local;
+      }
+  profile.conf: |
+      upstream  profile_upstream  {
+          server profile.r19-7-profile-svc.svc.cluster.local;
+      }
+  recommendations.conf: |
+      upstream  recommendations_upstream  {
+          server recommendations.r19-3-recommendations-svc.svc.cluster.local;
+      }
+  resources.conf: |
+      upstream  resources_upstream  {
+          server resources.r19-3-resources-svc.svc.cluster.local;
+      }
+  review.conf: |
+      upstream  review_upstream  {
+          server review.r19-3-review-svc.svc.cluster.local;
+      }
+  upstreams.conf: "underscores_in_headers on;\n"
+kind: ConfigMap
+metadata: 
+  creationTimestamp: ~
+  name: sites-config-20
+  selfLink: /api/v1/namespaces/r20-1-ingress-svc/configmaps/sites-config-20
