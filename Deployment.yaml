@@ -1,0 +1,90 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mock-service-VERSION
+  namespace: mock-service-ENV_NAME
+  labels:
+    app: mock-service
+    version: BUILD_VERSION
+    islive: "true"
+    feature: BRANCH_NAME
+    datetime: "DATE-TIME"
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mock-service
+        version: BUILD_VERSION
+        islive: "true"
+        feature: BRANCH_NAME
+        datetime: "DATE-TIME"
+    spec:
+      containers:
+        - image: us.gcr.io/-mobile-PRJ/mock-service:SB_DIMG_VERSION
+          name: mock-service-springboot
+          command: ["/bin/sh"]
+          args: ["-c", "java -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.security.egd=file:/dev/./urandom -Dssm.cache.disable=true -Dserver.port=8080 -Xms1024m -Xmx1024m -XX:NewSize=256m -XX:MaxNewSize=256m -XX:MaxMetaspaceSize=384m -XX:ThreadStackSize=1024 -XX:ParallelGCThreads=2 -XX:+UseConcMarkSweepGC -XX:SurvivorRatio=8 -XX:-TraceClassUnloading -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump-mock-service-\\`date\\`.hprof -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=60 -XX:+ScavengeBeforeFullGC -XX:+CMSScavengeBeforeRemark -jar -javaagent:/soju/cavisson/netdiagnostics/lib/ndmain.jar=time,ndAgentJar=/soju/cavisson/netdiagnostics/lib/ndagent-with-dep.jar,ndHome=/soju/cavisson/netdiagnostics,ndlPort=2 /soju/mobile/service/mock-service.jar --spring.config.location=${APPLICATION_CONFIG_PATH}"]
+          readinessProbe:
+              httpGet:
+                path: /health
+                port: 8080
+                httpHeaders:
+                - name: Accept
+                  value: application/json                  
+#                - name: x-channel
+#                  value: mcom
+              initialDelaySeconds: 60
+              periodSeconds: 30
+              successThreshold: 1
+          livenessProbe:
+              httpGet:
+                path: /health
+                port: 8080
+                httpHeaders:
+                - name: Accept
+                  value: application/json                 
+#                - name: x-channel
+#                  value: mcom
+              initialDelaySeconds: 180
+              periodSeconds: 30
+              timeoutSeconds: 3
+          env:
+          - name: CREDENTIALS_PATH
+            value: /soju/config/secrets/secrets.properties
+          - name: ENVIRONMENT_CONFIG_PATH
+            value: /soju/config/environment/environment.properties
+          - name: APPLICATION_CONFIG_PATH
+            value: /soju/config/application/override.properties
+          volumeMounts:
+          - mountPath: /soju/config/secrets/
+            name: secrets-volume
+          - mountPath: /soju/config/environment/
+            name: env-volume
+          - mountPath: /soju/config/application/
+            name: app-volume
+          - mountPath: /soju/cavisson/netdiagnostics/config/
+            name: nd-volume
+          ports:
+          - containerPort: 8080
+            name: mock-service-sb
+          resources:
+             limits:
+              cpu: 800m
+              memory: 1864Mi
+             requests:
+              cpu: 800m
+              memory: 1864Mi
+      volumes:
+      - name: secrets-volume
+        secret:
+          secretName: secrets-BUILD-VERSION
+      - name: env-volume
+        configMap:
+          name: env-config-BUILD-VERSION
+      - name: app-volume
+        configMap:
+          name: app-config-BUILD-VERSION
+      - name: nd-volume
+        configMap:
+          name: cmon-config-BUILD-VERSION
