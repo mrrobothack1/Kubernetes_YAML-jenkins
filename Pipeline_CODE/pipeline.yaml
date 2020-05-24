@@ -1,0 +1,200 @@
+def env_name="dev"
+#def org="cx-innovation"
+def app_branch_name="develop"
+def cicd_branch_name="18_7"
+def app_name="videoml"
+def gke_project_env_name="soju-mobile-lle"
+def cluster_name="videoml-1"
+def cluster_zone="us-central1-b"
+def cluster_region="us-central1"
+def name_space="vml-test"
+def autoscale_minpod="1"
+def autoscale_maxpod="1"
+def pod_cpu="1"
+def pod_memory="2500Mi"
+def autoscale_cpupod="45"
+def dimg_version="${BUILD_ID}"
+def app_repo_name="video-ml"
+def cicd_repo="git@github.soju.com:Mobile/cicd.git"
+def scm_repo="https://github.soju.com/video-ml"
+def is_autoscale_enabled=false
+def service_name="videoml"
+def release_version="R1_9_5_10"
+
+
+
+
+pipeline {
+    agent {
+        label 'SLAVE-01'
+    }
+    stages {
+                stage('Workspace CleanUp') {
+            steps {
+                 deleteDir()
+            }
+        }
+        stage('Git Initiate') {
+            steps {
+
+                   git branch: "${app_branch_name}", credentialsId: 'pzcxstr', url: "${scm_repo}"
+            }
+        }
+        stage('Maven Build') {
+            steps {
+               sh """
+                  mvn clean install -DskipTests
+               """
+            }
+        }
+        stage('Nexus Upload') {
+            steps {
+               sh """
+                 cd ${WORKSPACE}/target
+                 curl -v -u Mobile_Admin:M0b1l1ty --upload-file *.jar  http://mobile-nexus.soju.com:8080/nexus/content/repositories/snapshots/com/soju/mobile/service/${dimg_version}-${env_name}-${app_branch_name}_${app_name}.jar
+               """
+            }
+        }
+        stage('BuildConfig') {
+            steps {
+
+               git branch: "${cicd_branch_name}", credentialsId: 'pzcxstr', url: "${cicd_repo}"
+
+               sh """
+
+                  cd ${WORKSPACE}/gcp/${app_name}/docker/springboot/
+
+                  sed -i "s/NEXUS_REPO_NAME/snapshots/g" Dockerfile 
+                  sed -i "s/JAR_NAME/${dimg_version}-${env_name}-${app_branch_name}_${app_name}/g" Dockerfile
+                      
+                  docker build -t ${app_name}:${app_branch_name}${dimg_version} .
+
+                  docker tag ${app_name}:${app_branch_name}${dimg_version} us.gcr.io/${gke_project_env_name}/${app_name}:${app_branch_name}${dimg_version}
+                  cd /opt
+                  gcloud auth activate-service-account mdop-admin@soju-mobile-lle.iam.gserviceaccount.com --key-file=mdop-admin-lle.json
+                  cd
+
+                  gcloud docker -- push us.gcr.io/${gke_project_env_name}/${app_name}:${app_branch_name}${dimg_version}
+
+                  docker rmi -f \$(docker images --quiet ${app_name}:${app_branch_name}${dimg_version})
+               """
+            }        
+        }
+        stage('Secrets and App Config') {
+            steps {
+
+               git branch: "${cicd_branch_name}", credentialsId: 'pzcxstr', url: "${cicd_repo}"
+
+               sh """
+                WorkSpace="${WORKSPACE}/gcp/videoml/configs/credentials/" 
+                outPutFile="secrets.properties" 
+                credentialsDirs=$(find $WorkSpace -mindepth 1 -maxdepth 1 -type d -exec basename {} \;) 
+                oldIFS="$IFS" 
+                IFS=$'\n' 
+                for credentialsDir in $credentialsDirs 
+                do 
+                    credentialsFiles=$(find $WorkSpace/$credentialsDir -mindepth 1 -maxdepth 1 -type f -exec basename {} \; | grep -i ${env_name}) 
+                    for credentialsFile in $credentialsFiles 
+                    do 
+                        cat $WorkSpace/$credentialsDir/$credentialsFile | tee -a $WorkSpace/$outPutFile 
+                    done 
+                done
+                IFS="$oldIFS"               
+                cd ${WORKSPACE}/gcp/${app_name}/configs/credentials/
+                sed -i "s/secrets-VERSION/secrets-${dimg_version}/g" secrets-cfg.yaml
+                #sed -i "s/${app_name}-ENV_NAME/${name_space}/g" secrets-cfg.yaml
+                sed -i "s/videoml-ENV_NAME/${name_space}/g" secrets-cfg.yaml
+                sed -i "s/BUILD_VERSION/${release_version}${dimg_version}/g" secrets-cfg.yaml
+                sed -i "s/BRANCH_NAME/${app_branch_name}/g" secrets-cfg.yaml
+                sed -i "s/DATE-TIME/\$(date +%Y-%m-%d_%H-%M-%S)CST/g" secrets-cfg.yaml
+                gcloud container --project "${gke_project_env_name}" clusters get-credentials ${cluster_name} --zone="${cluster_zone}"
+                kubectl config set-context ${name_space} --namespace=${name_space} --cluster=gke_${gke_project_env_name}_${cluster_zone}_${cluster_name} --user=gke_${gke_project_env_name}_${cluster_zone}_${cluster_name}
+                kubectl config use-context ${name_space}
+                sed -i  "s/SECRET_PROPS/`cat secrets.properties | base64 -w0`/g" secrets-cfg.yaml | kubectl apply -f - --namespace=${name_space}
+                cd ${WORKSPACE}/gcp/$app_name/configs/application
+                cp -p  ${env_name}.properties application.properties
+                kubectl create configmap app-config-${dimg_version} --from-file=./application.properties --dry-run -o yaml --namespace=${name_space} | kubectl apply -f - --namespace=${name_space}
+                """       
+            }
+        }
+        stage('Env Config') {
+            steps {
+
+               git branch: "${cicd_branch_name}", credentialsId: 'pzcxstr', url: "${cicd_repo}"
+
+               sh """
+                outPutFile="environment.properties" 
+                WorkSpace="${WORKSPACE}/gcp/videoml/configs/endpoints/" 
+                endpointDirs=$(find $WorkSpace -mindepth 1 -maxdepth 1 -type d -exec basename {} \;) 
+                oldIFS="$IFS" 
+                IFS=$'\n' 
+                for endpointDir in $endpointDirs 
+                do 
+                    if [[ $endpointDir != "cmon" ]]
+                    then
+                        endpointFiles=$(find $WorkSpace/$endpointDir -mindepth 1 -maxdepth 1 -type f -exec basename {} \; | grep -i dev) 
+                        for endpointFile in $endpointFiles 
+                        do 
+                            cat $WorkSpace/$endpointDir/$endpointFile | tee -a $WorkSpace/$outPutFile 
+                        done
+                    fi
+                done 
+                IFS="$oldIFS"
+                cd ${WORKSPACE}/gcp/videoml/configs/endpoints/                
+                gcloud container --project "${gke_project_env_name}" clusters get-credentials ${cluster_name} --zone="${cluster_zone}"
+                kubectl config set-context ${name_space} --namespace=${name_space} --cluster=gke_${gke_project_env_name}_${cluster_zone}_${cluster_name} --user=gke_${gke_project_env_name}_${cluster_zone}_${cluster_name}
+                kubectl config use-context ${name_space}
+                kubectl create configmap env-config-${dimg_version} --from-file=./environment.properties --dry-run -o yaml --namespace=${name_space} | kubectl apply -f - --namespace=${name_space} 
+                """
+            }
+        }
+        stage('Deploy ND Properties') {
+            steps {
+                sh"""
+                    cd ${WORKSPACE}/gcp/videoml/configs/endpoints/ 
+                    gcloud container --project "${gke_project_env_name}" clusters get-credentials ${cluster_name} --zone="${cluster_zone}"
+                    kubectl config set-context ${name_space} --namespace=${name_space} --cluster=gke_${gke_project_env_name}_${cluster_zone}_${cluster_name} --user=gke_${gke_project_env_name}_${cluster_zone}_${cluster_name}
+                    kubectl config use-context ${name_space} 
+                    kubectl create configmap cmon-config-${dimg_version} --from-file=./cmon --dry-run -o yaml --namespace=r18-7-videoml-dev | kubectl apply -f - --namespace=r18-7-videoml-dev 
+                """    
+                
+            }
+        }
+        stage('Deployment') {
+            steps {
+               sh """
+                  cd ${WORKSPACE}/gcp/${app_name}/
+                  sed -i 's/app_name\\:SB_DIMG_VERSION/${app_name}:SB_DIMG_VERSION/' deployment.yaml
+                  sed -i "s/app_name/${app_name}/g" deployment.yaml
+                  sed -i "s/${app_name}-VERSION/${app_name}-\$(echo ${release_version} | tr '[A-Z]' '[a-z]' | sed 's/_/-/g')/g" deployment.yaml
+                  sed -i "s/SB_DIMG_VERSION/${app_branch_name}${dimg_version}/g" deployment.yaml
+                  sed -i "s/NAMESPACE/${name_space}/g" deployment.yaml
+                  sed -i "s/BUILD_VERSION/${release_version}_${dimg_version}/g" deployment.yaml
+                  sed -i "s/BRANCH_NAME/${app_branch_name}/g" deployment.yaml
+                  sed -i "s/DATE-TIME/\$(date +%Y-%m-%d_%H-%M-%S)CST/g" deployment.yaml
+                  sed -i "s/secrets-BUILD-VERSION/secrets-${dimg_version}/g" deployment.yaml
+                  sed -i "s/env-config-BUILD-VERSION/env-config-${dimg_version}/g" deployment.yaml
+                  sed -i "s/app-config-BUILD-VERSION/app-config-${dimg_version}/g" deployment.yaml
+                  sed -i "s/scripts-config-BUILD-VERSION/scripts-config-${dimg_version}/g" deployment.yaml
+                  sed -i "s/soju-mobile-PRJ/soju-mobile-lle/g" deployment.yaml
+                  sed -i "s/CA_CERT_PASSWORD/changeit/g" deployment.yaml
+                  sed -i "s/cmon-config-BUILD-VERSION/cmon-config-${dimg_version}/g" deployment.yaml
+                  OAPI_DOMAIN=$(kubectl get configmap env-config-${dimg_version} --namespace=${name_space} -o yaml | grep openapi.baseurl | cut -f2 -d"=" | sed "s/# OAPI//g" | sed "s/http:\/\///g" | sed 's/\\n//g') 
+                  WAlleT_DOMAIN=$(kubectl get configmap env-config-${dimg_version} --namespace=${name_space} -o yaml | grep wallet.domain | cut -f2 -d"=" | sed "s/# OAPI//g" | sed "s/http:\/\///g" | sed "s/https:\/\///g" | sed 's/\\n//g') 
+                  gcloud container --project "${gke_project_env_name}" clusters get-credentials ${cluster_name} --zone="${cluster_zone}"
+                  kubectl config set-context ${name_space} --namespace=${name_space} --cluster=gke_${gke_project_env_name}_${cluster_zone}_${cluster_name} --user=gke_${gke_project_env_name}_${cluster_zone}_${cluster_name}
+                  kubectl config use-context ${name_space}
+                  sed -i "s/EGRESS_LB_IP/\$(kubectl get svc egproxy -o=custom-columns=NAME:.spec.clusterIP --namespace=${egress_gw_service} | grep -v NAME)/g" deployment.yaml
+                  sed -i 's/stage: live/stage: live-plus-one/g' deployment.yaml
+                  sed -i "s/OAPI_DOMAIN/${OAPI_DOMAIN}/g" deployment.yaml 
+                  sed -i "s/WAlleT_DOMAIN/${WAlleT_DOMAIN}/g" deployment.yaml
+                  kubectl apply -f deployment.yaml
+                  if [ $is_autoscale_enabled == "true" ];then
+                  kubectl autoscale deployment ${app_name}-${dimg_version} --min=${autoscale_minpod} --max=${autoscale_maxpod} --cpu-percent=${autoscale_cpupod} --namespace=${name_space}
+                  fi
+
+               """
+            }
+        }
+    }
+}

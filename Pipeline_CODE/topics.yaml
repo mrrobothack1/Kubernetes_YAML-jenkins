@@ -1,0 +1,107 @@
+(https://devopscube.com/free-kubernetes-ebook/)
+]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+
+SHELL SCRIPTING  > 
+ANSIBLE-PLAYBOOK > https://www.youtube.com/watch?v=Z01b9QZG0D0
+                   Inverntiories
+                  
+
+[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ 
+
+>>>>>>>>>>>>>>>>>>
+  https://www.youtube.com/watch?v=MyStCEmAYsg
+https://www.youtube.com/watch?v=X3Pr5VATOyA
+
+GROOVY
+SHARED LIBRARY
+
+>>>>>>>>>>>>>>>>>>
+
+Spinager > https://www.youtube.com/watch?v=dwdVwE52KkU
+           https://www.youtube.com/watch?v=H_rFShgmJHY&list=PLkzenGYiHxONaK3PJq0YyOdzYRrq76Zgu
+
+]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+
+KUBERNETES > CERTIFCATION  (((https://kubernetes.io/docs/reference/kubectl/cheatsheet/)))
+            https://stackoverflow.com/questions/51823735/kuberenetes-hpa-patch-command-not-working
+            https://github.com/kelseyhightower/kubernetes-the-hard-way
+            http://pstylianides.com/deploy-and-scale-a-multi-env-service-on-kubernetes/
+
+    ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+
+while :; do echo "$(date)" && kubectl get hpa --context=gke_soju-mobile-prd_us-central1-b_mobileservices-prd-usc1-1 --all-namespaces | awk '$7 != "0"' && sleep 10; done | tee -a prod-central-allhpa.txt
+while :; do echo "$(date)" && kubectl get hpa --context=gke_soju-mobile-prd_us-east1-b_mobileservices-prd-use1-1 --all-namespaces | awk '$7 != "0"' && sleep 10; done | tee -a prod-east-allhpa.txt
+while :; do echo "$(date)" && kubectl get hpa --context=gke_soju-mobile-prd_us-central1-b_mobileservices-egproxy-prd-usc1-1 --all-namespaces | awk '$7 != "0"' && sleep 10; done | tee -a prod-central-egproxy.txt
+while :; do echo "$(date)" && kubectl get hpa --context=gke_soju-mobile-prd_us-east1-b_mobileservices-egproxy-prd-use1-1 --all-namespaces | awk '$7 != "0"' && sleep 10; done | tee -a prod-east-egproxy.txt
+
+
+THREAD AND HEAP DUMPS
+kubectl exec -it msp-24-3098544811-7wpct --namespace=msp-perf -- /bin/bash
+
+jstack -l {PID} > threadDump.txt
+
+kubectl cp msp-perf/msp-24-3098544811-7wpct:/threadDump.txt /Users/raghunathan/Documents/MSP_ThreadDump.txt
+
+HEAP DUMP
+kubectl exec -it msp-24-3098544811-7wpct --namespace=mui-perf -- /bin/bash
+
+jmap -dump:format=b,file=filename.hprof {PID}
+
+kubectl cp msp-perf/msp-24-3098544811-7wpct:/filename.hprof /Users/raghunathan/Documents/filename.hprof
+
+]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+
+
+GCP> CERTIFCATION
+AWS > CERTIFCATION
+
+ISTIO >  https://www.youtube.com/watch?v=1iyFq2VaL5Y
+         https://www.youtube.com/watch?v=cB611FtjHcQ
+
+NOMAD > https://www.youtube.com/watch?v=s_Fm9UtL4YU
+        https://www.youtube.com/watch?v=A6CuZUoINX0
+
+
+
+>>>>>>>>>>>>>>>>>
+
+TERFAFORM > https://www.youtube.com/watch?v=5WykrpB7qS4&list=PL_OdF9Z6GmVaRD6e6sYLQO_WYqTKcj3aj
+
+API RULES AND NETWORKING ((IN & OUT))
+
+>>>>>>>>>>>>>>>>>>
+
+]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+
+
+PROMOTHEUS > https://www.youtube.com/watch?v=jxNRXslYmrU&t=604s
+GRAFANA > https://www.youtube.com/watch?v=CmPdyvgmw-A&t=896s 
+SPLUNK > https://www.youtube.com/watch?v=6lX4DOd1T-s 
+CAVISION > https://www.cavisson.com/apm-demo-videos/
+DATADOG > https://www.youtube.com/watch?v=uI3YN_cnahk&list=PLdh-RwQzDsaOoFo0D8xSEHO0XXOKi1-5J&index=1
+
+]]]]]]]]]]]]]]]
+
+DOCKER
+
+PACKER > https://www.youtube.com/watch?v=ydxFi52-ngk
+         https://www.youtube.com/watch?v=xMsmmGdmiys
+
+
+]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+
+
+PYTHON
+]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+
+ (((( NETWORKING, WRITING RCA CODE,ROOTKIT IN KALI LINUX )))”””””
+
+Rootkit > https://www.youtube.com/watch?v=sFOKz_fd0SA
+         https://www.youtube.com/watch?v=Yg5Ot3_hKsk
+        https://www.youtube.com/watch?v=1TaGqQemNgI
+        https://www.youtube.com/watch?v=-ZLqcsFZmo4
+        https://www.youtube.com/watch?v=cVz9e6u44YQ
+        https://www.youtube.com/watch?v=sFOKz_fd0SA&t=248s
+        https://www.youtube.com/watch?v=0LvF0KtBWxY
+
+“”””REDHAT>OPENSHIFT > https://www.youtube.com/watch?v=-RqiHB-bnkg
