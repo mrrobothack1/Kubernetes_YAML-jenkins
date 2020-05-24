@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gopuller-env
+data:
+  CLUSTER_NAME: soju-poc-lle
+  MONGOIP: $DB_IP
+  MONGO_PORT: "27017"
+  DATABASE: metrics_details
+  PROM_SVC: prometheus.aidi-components.svc.cluster.local
+  PROM_PORT: "9090"
+© 2020 GitHub, Inc.
